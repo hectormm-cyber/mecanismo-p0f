@@ -1,56 +1,55 @@
-
 # MecanismoP0f (Modo 1)
 
-Servidor de monitoramento do **Modo 1** do mecanismo de detecáao e resposta a dispositivos nao autorizados em redes legadas. O Modo 1 Ç a abordagem **ativa e de menor custo**.
+Servidor de monitoramento do **Modo 1** do mecanismo de detec√ß√£o e resposta a dispositivos n√£o autorizados em redes legadas. O Modo 1 √© a abordagem **ativa e de menor custo**.
 
 ## Papel
 
-O servidor fica na LAN da matriz e nao và o tr†fego da filial. Ele descobre os dispositivos pelo que o roteador da filial informa atravÇs do t£nel VPN, sonda cada dispositivo e là o *fingerprint* da resposta com o p0f. A coleta Ç ativa e a an†lise Ç passiva.
+O servidor fica na LAN da matriz e n√£o v√™ o tr√°fego da filial. Ele descobre os dispositivos pelo que o roteador da filial informa atrav√©s do t√∫nel VPN, sonda cada dispositivo e l√™ o *fingerprint* da resposta com o p0f. A coleta √© ativa e a an√°lise √© passiva.
 
-1. **Presenáa pelo DHCP:** o roteador envia o log DHCP por Syslog (UDP 514).
-2. **Presenáa pelo ARP:** o servidor acessa o roteador por SSH, dispara uma varredura da LAN (`/tool ip-scan`) e là a tabela ARP e os leases DHCP. Cobre hosts com IP est†tico.
-3. **Sondagem:** `ping` e `nmap -sT` no IP detectado. O p0f là o SYN+ACK de resposta.
-4. **Decisao:** comparaáao com o *baseline* (MAC ou prefixo, portas, saltos, fam°lia de SO e *Class-Id*) e gravaáao do veredito.
+1. **Presen√ßa pelo DHCP:** o roteador envia o log DHCP por Syslog (UDP 514).
+2. **Presen√ßa pelo ARP:** o servidor acessa o roteador por SSH, dispara uma varredura da LAN (`/tool ip-scan`) e l√™ a tabela ARP e os leases DHCP. Cobre hosts com IP est√°tico.
+3. **Sondagem:** `ping` e `nmap -sT` no IP detectado. O p0f l√™ o SYN+ACK de resposta.
+4. **Decis√£o:** compara√ß√£o com o *baseline* (MAC ou prefixo, portas, saltos, fam√≠lia de SO e *Class-Id*) e grava√ß√£o do veredito.
 
-## Identificaáao
+## Identifica√ß√£o
 
 | Item | Valor |
 | --- | --- |
 | Hostname | `MecanismoP0f` |
 | IP | `10.0.0.12`, LAN da matriz (`10.0.0.0/24`) |
 | Interface de captura do p0f | `ens3` |
-| Rel¢gio | UTC, com NTP |
-| Roteador da filial | `CHR-FILIAL`, `10.1.0.1`, RouterOS 6.40.4, tambÇm em UTC com NTP |
+| Rel√≥gio | UTC, com NTP |
+| Roteador da filial | `CHR-FILIAL`, `10.1.0.1`, RouterOS 6.40.4, tamb√©m em UTC com NTP |
 | LAN monitorada | `10.1.0.0/24` |
 
-## Conte£do desta pasta
+## Conte√∫do desta pasta
 
-Os arquivos estao no mesmo caminho que ocupam no servidor.
+Os arquivos est√£o no mesmo caminho que ocupam no servidor.
 
-| Arquivo | Versao | Funáao | Là | Grava |
+| Arquivo | Vers√£o | Fun√ß√£o | L√™ | Grava |
 | --- | --- | --- | --- | --- |
-| `opt/mecanismo/detector.py` | v2 | Presenáa pelo log DHCP | `mikrotik.log`, `baseline.json` | `events.jsonl` |
+| `opt/mecanismo/detector.py` | v2 | Presen√ßa pelo log DHCP | `mikrotik.log`, `baseline.json` | `events.jsonl` |
 | `opt/mecanismo/arp_poller.py` | v2 | Varredura, tabela ARP e leases por SSH | Roteador, `baseline.json`, `events.jsonl` | `events.jsonl` |
-| `opt/mecanismo/prober.py` | v5 | Sondagem, *fingerprinting* e decisao | `events.jsonl`, `p0f.log`, `baseline.json` | `verdicts.jsonl`, `alerts.jsonl` |
-| `opt/mecanismo/resumo.py` | | Resumo de eventos e vereditos, com latància | `events.jsonl`, `verdicts.jsonl` | Tela |
-| `opt/mecanismo/baseline.json` | | Padroes de ativos autorizados | | |
+| `opt/mecanismo/prober.py` | v5 | Sondagem, *fingerprinting* e decis√£o | `events.jsonl`, `p0f.log`, `baseline.json` | `verdicts.jsonl`, `alerts.jsonl` |
+| `opt/mecanismo/resumo.py` | | Resumo de eventos e vereditos, com lat√™ncia | `events.jsonl`, `verdicts.jsonl` | Tela |
+| `opt/mecanismo/baseline.json` | | Padr√µes de ativos autorizados | | |
 | `etc/rsyslog.d/10-filial.conf` | | Recebe Syslog em UDP 514 e separa o que vem do `CHR-FILIAL` | | `/var/log/filial/mikrotik.log` |
-| `etc/systemd/system/mecanismo.target` | | Agrupa os quatro serviáos | | |
+| `etc/systemd/system/mecanismo.target` | | Agrupa os quatro servi√ßos | | |
 | `etc/systemd/system/mecanismo-*.service` | | p0f, prober, detector e poller ARP | | |
-| `root/.ssh/config` | | Exceáao de SSH com SHA-1 s¢ para `10.1.0.1` e chave do GitHub | | |
+| `root/.ssh/config` | | Exce√ß√£o de SSH com SHA-1 s√≥ para `10.1.0.1` e chave do GitHub | | |
 
-## Serviáos
+## Servi√ßos
 
-| Serviáo | Comando |
+| Servi√ßo | Comando |
 | --- | --- |
 | `mecanismo-p0f` | `p0f -i ens3 -f /etc/p0f/p0f.fp -o /var/log/p0f/p0f.log tcp` |
 | `mecanismo-prober` | `prober.py --probe-authorized` |
 | `mecanismo-detector` | `detector.py` |
 | `mecanismo-arp` | `arp_poller.py` |
 
-- O `--probe-authorized` Ç obrigat¢rio: sem ele o prober ignora os MACs autorizados, e um clone de MAC nunca seria sondado.
-- O prober sobe antes do detector e do poller, porque là o `events.jsonl` a partir do fim.
-- Parar ou reiniciar o `mecanismo.target` propaga para os quatro serviáos.
+- O `--probe-authorized` √© obrigat√≥rio: sem ele o prober ignora os MACs autorizados, e um clone de MAC nunca seria sondado.
+- O prober sobe antes do detector e do poller, porque l√™ o `events.jsonl` a partir do fim.
+- Parar ou reiniciar o `mecanismo.target` propaga para os quatro servi√ßos.
 
 ```bash
 systemctl status mecanismo.target
@@ -62,7 +61,7 @@ python3 /opt/mecanismo/prober.py --ip 10.1.0.198
 
 ## *Baseline*
 
-A chave Ç o MAC completo ou o prefixo do fabricante (tràs primeiros bytes). A entrada do MAC completo tem prioridade sobre a do prefixo.
+A chave √© o MAC completo ou o prefixo do fabricante (tr√™s primeiros bytes). A entrada do MAC completo tem prioridade sobre a do prefixo.
 
 ```json
 {
@@ -77,36 +76,36 @@ A chave Ç o MAC completo ou o prefixo do fabricante (tràs primeiros bytes). A en
 }
 ```
 
-| Campo | Uso na decisao |
+| Campo | Uso na decis√£o |
 | --- | --- |
 | Chave | Fator MAC: define `authorized` ou `unknown` |
 | `ports` | As portas abertas para o mecanismo devem ser exatamente estas |
 | `dist` | Saltos medidos pelo p0f ou estimados pelo TTL |
-| `os` | Fam°lia de SO observada |
-| `class_id` | *Class-Id* do DHCP, comparado s¢ em eventos vindos de DHCP |
+| `os` | Fam√≠lia de SO observada |
+| `class_id` | *Class-Id* do DHCP, comparado s√≥ em eventos vindos de DHCP |
 | `name`, `hardware` | Informativos |
 
 ## Dados gerados (fora do Git)
 
-| Arquivo | Conte£do |
+| Arquivo | Conte√∫do |
 | --- | --- |
 | `/var/log/filial/mikrotik.log` | Log DHCP bruto do roteador |
-| `/var/log/mecanismo/events.jsonl` | Eventos de presenáa (detector e poller) |
+| `/var/log/mecanismo/events.jsonl` | Eventos de presen√ßa (detector e poller) |
 | `/var/log/mecanismo/verdicts.jsonl` | Todos os vereditos |
-| `/var/log/mecanismo/alerts.jsonl` | S¢ os vereditos que geram alerta |
-| `/var/log/p0f/p0f.log` | Sa°da do p0f |
+| `/var/log/mecanismo/alerts.jsonl` | S√≥ os vereditos que geram alerta |
+| `/var/log/p0f/p0f.log` | Sa√≠da do p0f |
 
-As evidàncias de cada rodada de testes sao arquivadas fora do reposit¢rio.
+As evid√™ncias de cada rodada de testes s√£o arquivadas fora do reposit√≥rio.
 
-## Itens que nao estao no reposit¢rio
+## Itens que n√£o est√£o no reposit√≥rio
 
-| Item | Funáao | Como recriar |
+| Item | Fun√ß√£o | Como recriar |
 | --- | --- | --- |
-| `/root/.ssh/mecanismo_rsa` e `.pub` | Acesso do servidor ao usu†rio `monitor` do roteador | `ssh-keygen` e importaáao no RouterOS (abaixo) |
-| `/root/.ssh/github_mecanismo` e `.pub` | Acesso do servidor a este reposit¢rio | `ssh-keygen` e cadastro como *Deploy key* com escrita |
-| `/root/.ssh/known_hosts` | Chaves de host do roteador e do GitHub | Gravado na primeira conexao |
+| `/root/.ssh/mecanismo_rsa` e `.pub` | Acesso do servidor ao usu√°rio `monitor` do roteador | `ssh-keygen` e importa√ß√£o no RouterOS (abaixo) |
+| `/root/.ssh/github_mecanismo` e `.pub` | Acesso do servidor a este reposit√≥rio | `ssh-keygen` e cadastro como *Deploy key* com escrita |
+| `/root/.ssh/known_hosts` | Chaves de host do roteador e do GitHub | Gravado na primeira conex√£o |
 
-## Reinstalaáao a partir do reposit¢rio
+## Reinstala√ß√£o a partir do reposit√≥rio
 
 Os comandos abaixo **sobrescrevem** os arquivos de mesmo nome no servidor.
 
@@ -117,7 +116,7 @@ Os comandos abaixo **sobrescrevem** os arquivos de mesmo nome no servidor.
    apt install -y rsyslog p0f nmap hping3 tcpdump python3 git
    ```
 
-2. Arquivos do reposit¢rio:
+2. Arquivos do reposit√≥rio:
 
    ```bash
    cd /root/mecanismo-p0f/modo1/MecanismoP0f
@@ -125,7 +124,7 @@ Os comandos abaixo **sobrescrevem** os arquivos de mesmo nome no servidor.
    install -m 600 root/.ssh/config /root/.ssh/config
    ```
 
-3. Diret¢rios de log e rsyslog:
+3. Diret√≥rios de log e rsyslog:
 
    ```bash
    mkdir -p /var/log/filial /var/log/mecanismo /var/log/p0f
@@ -143,7 +142,7 @@ Os comandos abaixo **sobrescrevem** os arquivos de mesmo nome no servidor.
    No roteador: `/user ssh-keys import public-key-file=mecanismo_rsa.pub user=monitor`.
    Teste no servidor: `ssh -i /root/.ssh/mecanismo_rsa monitor@10.1.0.1 '/system identity print'`.
 
-5. Serviáos:
+5. Servi√ßos:
 
    ```bash
    systemctl daemon-reload
@@ -151,22 +150,21 @@ Os comandos abaixo **sobrescrevem** os arquivos de mesmo nome no servidor.
    systemctl status mecanismo.target
    ```
 
-## Como atualizar este reposit¢rio
+## Como atualizar este reposit√≥rio
 
-Depois de alterar um arquivo no servidor, copie-o para c† mantendo o caminho e envie:
+Depois de alterar um arquivo no servidor, copie-o para c√° mantendo o caminho e envie:
 
 ```bash
 cd /root/mecanismo-p0f
 cp --parents /opt/mecanismo/prober.py modo1/MecanismoP0f/
 git add modo1/MecanismoP0f
-git commit -m "[modo1/MecanismoP0f] descriáao da alteraáao"
+git commit -m "[modo1/MecanismoP0f] descri√ß√£o da altera√ß√£o"
 git push
 ```
 
-## Documentaáao de referància
+## Documenta√ß√£o de refer√™ncia
 
-- Registro de Configuraáao e Evidàncias do Laborat¢rio, Modo 1, rodada 1 (13 a 18/10/2026)
+- Registro de Configura√ß√£o e Evid√™ncias do Laborat√≥rio, Modo 1, rodada 1 (13 a 18/10/2026)
 - Registro Complementar, Modo 1, rodada 2 (01 e 02/11/2026)
 
-A configuraáao do roteador `CHR-FILIAL` ser† versionada em `modo1/CHR-FILIAL/`.
-
+A configura√ß√£o do roteador `CHR-FILIAL` ser√° versionada em `modo1/CHR-FILIAL/`.
