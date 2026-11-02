@@ -1,0 +1,15 @@
+
+[Unit]
+Description=Sensor passivo do Mecanismo Modo 2
+After=network-online.target mecanismo-p0f.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/mecanismo/sensor.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+

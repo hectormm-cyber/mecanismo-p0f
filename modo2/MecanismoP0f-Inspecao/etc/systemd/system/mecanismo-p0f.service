@@ -1,0 +1,18 @@
+
+[Unit]
+Description=p0f do Mecanismo Modo 2 (captura passiva na ponte)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+RuntimeDirectory=p0f
+RuntimeDirectoryMode=0755
+ExecStartPre=/usr/sbin/ip link set br0 promisc on
+ExecStart=/usr/sbin/p0f -i br0 -p -f /etc/p0f/p0f.fp -o /var/log/p0f/p0f.log -s /run/p0f/p0f.sock
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+

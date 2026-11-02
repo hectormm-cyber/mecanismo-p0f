@@ -1,0 +1,24 @@
+network:
+  version: 2
+  renderer: networkd
+  ethernets:
+    ens3:
+      dhcp4: no
+      dhcp6: no
+    ens4:
+      dhcp4: no
+      dhcp6: no
+  bridges:
+    br0:
+      interfaces: [ens3, ens4]
+      dhcp4: no
+      dhcp6: no
+      addresses: [10.1.0.10/24]
+      routes:
+        - to: default
+          via: 10.1.0.1
+      nameservers:
+        addresses: [10.1.0.1]
+      parameters:
+        stp: false
+        forward-delay: 0
