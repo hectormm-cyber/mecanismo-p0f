@@ -1,6 +1,6 @@
 # MecanismoP0f (Modo 2, matriz)
 
-Servidor de decisão do **Modo 2** do mecanismo de detecção e resposta a dispositivos não autorizados em redes legadas (TCC de Segurança da Informação, UNISINOS). O Modo 2 é a abordagem **passiva e de maior custo**: um sensor em ponte na filial (`MecanismoP0f-Inspecao`) vê o tráfego antes da VPN e envia os eventos para este servidor, que decide.
+Servidor de decisão do **Modo 2** do mecanismo de detecção e resposta a dispositivos não autorizados em redes legadas. O Modo 2 é a abordagem **passiva e de maior custo**: um sensor em ponte na filial (`MecanismoP0f-Inspecao`) vê o tráfego antes da VPN e envia os eventos para este servidor, que decide.
 
 ## Papel
 
