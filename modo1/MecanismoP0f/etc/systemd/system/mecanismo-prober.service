@@ -1,5 +1,5 @@
 [Unit]
-Description=Mecanismo - sondagem, fingerprinting e decisao (prober v5)
+Description=Mecanismo - sondagem, fingerprinting e decisao (prober v6)
 PartOf=mecanismo.target
 After=mecanismo-p0f.service
 

@@ -1,0 +1,17 @@
+<!--
+  Trechos do /var/ossec/etc/ossec.conf do agente Wazuh instalado no MecanismoP0f
+  (igual nos dois modos). Aplicar com wazuh/aplicar_trechos.py agente.
+-->
+
+<!-- 1) Leitura dos vereditos, antes do ultimo </ossec_config>. -->
+<localfile>
+  <log_format>json</log_format>
+  <location>/var/log/mecanismo/verdicts.jsonl</location>
+</localfile>
+
+<!-- 2) Active response desligada neste agente: o mecanismo precisa continuar sondando
+     ou observando o ativo contido. O script troca o <disabled> do bloco
+     <active-response> que ja existe no ossec.conf do agente. -->
+<active-response>
+  <disabled>yes</disabled>
+</active-response>

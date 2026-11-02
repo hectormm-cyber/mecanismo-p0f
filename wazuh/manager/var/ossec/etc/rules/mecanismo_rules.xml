@@ -1,0 +1,65 @@
+<!--
+  Regras do Mecanismo de deteccao e resposta, comuns ao Modo 1 e ao Modo 2.
+
+  Origem: /var/log/mecanismo/verdicts.jsonl no MecanismoP0f de cada modo, lido pelo
+  agente Wazuh local com log_format json. Cada linha e um veredito que segue o
+  contrato de wazuh/README.md: "origem": "mecanismo-p0f", "mode", "verdict", "srcip".
+
+  Faixa de IDs reservada: 100500 a 100599.
+
+  | ID     | Veredito                   | Nivel | Contencao |
+  | 100500 | qualquer (agrupadora)      | 0     | nao       |
+  | 100501 | consistent                 | 3     | nao       |
+  | 100502 | inconclusive               | 7     | nao       |
+  | 100510 | mismatch-possible-clone    | 12    | sim       |
+  | 100511 | unauthorized-fingerprinted | 12    | sim       |
+  | 100512 | unauthorized-unresolved    | 12    | sim       |
+
+  A decisao e do mecanismo; o Wazuh classifica, registra e executa a active response
+  configurada para 100510, 100511 e 100512 (trechos/ossec-manager.xml).
+-->
+<group name="mecanismo,">
+
+  <rule id="100500" level="0">
+    <decoded_as>json</decoded_as>
+    <field name="origem">^mecanismo-p0f$</field>
+    <field name="verdict">\.+</field>
+    <description>Mecanismo: veredito registrado</description>
+  </rule>
+
+  <rule id="100501" level="3">
+    <if_sid>100500</if_sid>
+    <field name="verdict">^consistent$</field>
+    <description>Mecanismo modo $(mode): ativo conforme ao baseline, $(srcip) $(mac)</description>
+    <group>mecanismo_conforme,</group>
+  </rule>
+
+  <rule id="100502" level="7">
+    <if_sid>100500</if_sid>
+    <field name="verdict">^inconclusive$</field>
+    <description>Mecanismo modo $(mode): veredito inconclusivo, $(srcip) $(mac), requer analise</description>
+    <group>mecanismo_analise,</group>
+  </rule>
+
+  <rule id="100510" level="12">
+    <if_sid>100500</if_sid>
+    <field name="verdict">^mismatch-possible-clone$</field>
+    <description>Mecanismo modo $(mode): possivel clone de ativo autorizado, $(srcip) $(mac), contencao</description>
+    <group>mecanismo_contencao,</group>
+  </rule>
+
+  <rule id="100511" level="12">
+    <if_sid>100500</if_sid>
+    <field name="verdict">^unauthorized-fingerprinted$</field>
+    <description>Mecanismo modo $(mode): dispositivo nao autorizado identificado, $(srcip) $(mac), contencao</description>
+    <group>mecanismo_contencao,</group>
+  </rule>
+
+  <rule id="100512" level="12">
+    <if_sid>100500</if_sid>
+    <field name="verdict">^unauthorized-unresolved$</field>
+    <description>Mecanismo modo $(mode): dispositivo nao autorizado sem resposta, $(srcip) $(mac), contencao</description>
+    <group>mecanismo_contencao,</group>
+  </rule>
+
+</group>

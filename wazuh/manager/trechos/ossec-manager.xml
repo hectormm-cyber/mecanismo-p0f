@@ -1,0 +1,29 @@
+<!--
+  Trechos do /var/ossec/etc/ossec.conf do manager (WazuhServer), comuns aos dois modos.
+  Nao e um ossec.conf completo: aplicar com wazuh/aplicar_trechos.py manager.
+-->
+
+<!-- 1) Lista branca, dentro do bloco <global>: nenhuma active response bloqueia
+     a LAN da matriz (servidores) nem o roteador da filial. -->
+<white_list>10.0.0.0/24</white_list>
+<white_list>10.1.0.1</white_list>
+
+<!-- 2) Contencao, antes do ultimo </ossec_config>. Os comandos firewall-drop (Linux)
+     e netsh (Windows) vem definidos na instalacao. Com location=all cada agente recebe
+     os dois e executa o do proprio sistema. O agente do MecanismoP0f tem a active
+     response desligada localmente (wazuh/agente-mecanismo/trechos/ossec-agente-mecanismo.xml). -->
+<active-response>
+  <disabled>no</disabled>
+  <command>firewall-drop</command>
+  <location>all</location>
+  <rules_id>100510,100511,100512</rules_id>
+  <timeout>3600</timeout>
+</active-response>
+
+<active-response>
+  <disabled>no</disabled>
+  <command>netsh</command>
+  <location>all</location>
+  <rules_id>100510,100511,100512</rules_id>
+  <timeout>3600</timeout>
+</active-response>
