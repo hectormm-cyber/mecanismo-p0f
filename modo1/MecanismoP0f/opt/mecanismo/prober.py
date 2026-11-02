@@ -1,8 +1,5 @@
 #!/usr/bin/env python3
-"""prober.py v6: sondagem ativa (nmap -sT), leitura do p0f e alertas.
-
-v6: o registro ganha "mecanismo" (identifica a origem para as regras do Wazuh)
-e "srcip" (copia do ip, campo que as active responses do Wazuh usam para bloquear).
+"""prober.py v5: sondagem ativa (nmap -sT), leitura do p0f e alertas.
 
 Fluxo: evento do detector (events.jsonl) -> ping (TTL) -> nmap -sT nas portas comuns
 -> leitura das linhas syn+ack do p0f.log para o IP -> comparacao com o baseline
@@ -223,8 +220,7 @@ def probe(ip, mac=None, status="unknown", expected=None, name=None, base=None,
     verdict, reasons = decide(status, expected, observed, ports, dist, base, class_id)
     alert = verdict in ALERT_VERDICTS
 
-    rec = {"ts": utcnow(), "mecanismo": "modo1", "ip": ip, "srcip": ip,
-           "mac": mac, "name": name, "status": status,
+    rec = {"ts": utcnow(), "ip": ip, "mac": mac, "name": name, "status": status,
            "hostname": hostname,
            "dhcp_class_id": None if class_id is MISSING else class_id,
            "expected_os": expected, "expected_ports": base.get("ports"),

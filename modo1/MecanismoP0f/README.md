@@ -30,7 +30,7 @@ Os arquivos estão no mesmo caminho que ocupam no servidor.
 | --- | --- | --- | --- | --- |
 | `opt/mecanismo/detector.py` | v2 | Presença pelo log DHCP | `mikrotik.log`, `baseline.json` | `events.jsonl` |
 | `opt/mecanismo/arp_poller.py` | v2 | Varredura, tabela ARP e leases por SSH | Roteador, `baseline.json`, `events.jsonl` | `events.jsonl` |
-| `opt/mecanismo/prober.py` | v6 | Sondagem, *fingerprinting* e decisão. Grava `mecanismo` e `srcip` para o Wazuh | `events.jsonl`, `p0f.log`, `baseline.json` | `verdicts.jsonl`, `alerts.jsonl` |
+| `opt/mecanismo/prober.py` | v5 | Sondagem, *fingerprinting* e decisão | `events.jsonl`, `p0f.log`, `baseline.json` | `verdicts.jsonl`, `alerts.jsonl` |
 | `opt/mecanismo/resumo.py` | | Resumo de eventos e vereditos, com latência | `events.jsonl`, `verdicts.jsonl` | Tela |
 | `opt/mecanismo/baseline.json` | | Padrões de ativos autorizados | | |
 | `etc/rsyslog.d/10-filial.conf` | | Recebe Syslog em UDP 514 e separa o que vem do `CHR-FILIAL` | | `/var/log/filial/mikrotik.log` |
@@ -84,10 +84,6 @@ A chave é o MAC completo ou o prefixo do fabricante (três primeiros bytes). A 
 | `os` | Família de SO observada |
 | `class_id` | *Class-Id* do DHCP, comparado só em eventos vindos de DHCP |
 | `name`, `hardware` | Informativos |
-
-## Integração com o Wazuh
-
-O `verdicts.jsonl` é enviado ao `WazuhServer` (`10.0.0.11`) por um agente Wazuh local, que lê o arquivo como JSON. As regras e a contenção estão em `modo1/WazuhServer/`. A *active response* fica desligada neste agente, para o mecanismo continuar sondando o ativo bloqueado.
 
 ## Dados gerados (fora do Git)
 
