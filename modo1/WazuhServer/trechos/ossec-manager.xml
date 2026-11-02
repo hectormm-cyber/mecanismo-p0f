@@ -1,0 +1,31 @@
+<!--
+  Trechos do /var/ossec/etc/ossec.conf do WazuhServer para o Mecanismo (Modo 1).
+  Nao e um ossec.conf completo: cada bloco abaixo e acrescentado ao arquivo existente,
+  dentro de <ossec_config>, conforme o README desta pasta.
+-->
+
+<!-- 1) Lista branca: dentro do bloco <global> que ja existe.
+     Nenhuma active response bloqueia estes enderecos, mesmo com veredito de alerta. -->
+<white_list>10.0.0.0/24</white_list>
+<white_list>10.1.0.1</white_list>
+
+<!-- 2) Contencao: acrescentar depois dos blocos <command> que ja existem.
+     Os comandos firewall-drop (Linux) e netsh (Windows) vem definidos na instalacao.
+     location=all envia aos agentes; cada um executa o script do proprio sistema e
+     ignora o outro. O agente do MecanismoP0f tem a active response desligada
+     localmente, para nao bloquear o ativo que ele precisa sondar. -->
+<active-response>
+  <disabled>no</disabled>
+  <command>firewall-drop</command>
+  <location>all</location>
+  <rules_id>100510,100511,100512</rules_id>
+  <timeout>3600</timeout>
+</active-response>
+
+<active-response>
+  <disabled>no</disabled>
+  <command>netsh</command>
+  <location>all</location>
+  <rules_id>100510,100511,100512</rules_id>
+  <timeout>3600</timeout>
+</active-response>
