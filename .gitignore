@@ -1,0 +1,24 @@
+
+# Chaves e segredos: nunca vao para o repositorio
+*_rsa
+*_ed25519
+github_mecanismo
+mecanismo_rsa
+*.pem
+*.key
+known_hosts
+authorized_keys
+
+# Logs e evidencias: ficam fora do Git
+*.jsonl
+*.log
+
+# Copias antigas de versoes
+*.bak
+*.bak[0-9]
+*.v[0-9]
+
+# Python
+__pycache__/
+*.pyc
+

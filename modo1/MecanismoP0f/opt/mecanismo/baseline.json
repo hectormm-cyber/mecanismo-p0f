@@ -1,0 +1,13 @@
+{
+  "14:18:77": {
+    "name": "Windows-Estacao",
+    "hardware": "Dell",
+    "os": "Windows",
+    "ports": [
+      445,
+      3389
+    ],
+    "dist": 2,
+    "class_id": "MSFT 5.0"
+  }
+}

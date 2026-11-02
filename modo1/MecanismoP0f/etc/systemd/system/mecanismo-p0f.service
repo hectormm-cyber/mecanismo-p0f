@@ -1,0 +1,12 @@
+[Unit]
+Description=Mecanismo - p0f passivo na interface ens3
+PartOf=mecanismo.target
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStartPre=/bin/mkdir -p /var/log/p0f
+ExecStart=/usr/sbin/p0f -i ens3 -f /etc/p0f/p0f.fp -o /var/log/p0f/p0f.log tcp
+Restart=on-failure
+RestartSec=5
+StandardOutput=null

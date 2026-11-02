@@ -1,0 +1,10 @@
+[Unit]
+Description=Mecanismo - sondagem, fingerprinting e decisao (prober v5)
+PartOf=mecanismo.target
+After=mecanismo-p0f.service
+
+[Service]
+ExecStartPre=/bin/mkdir -p /var/log/mecanismo
+ExecStart=/usr/bin/python3 -u /opt/mecanismo/prober.py --probe-authorized
+Restart=on-failure
+RestartSec=5

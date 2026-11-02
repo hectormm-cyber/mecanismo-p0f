@@ -1,0 +1,9 @@
+[Unit]
+Description=Mecanismo - coletor ARP e leases por SSH
+PartOf=mecanismo.target
+After=mecanismo-prober.service
+
+[Service]
+ExecStart=/usr/bin/python3 -u /opt/mecanismo/arp_poller.py
+Restart=on-failure
+RestartSec=5

@@ -1,0 +1,6 @@
+[Unit]
+Description=Mecanismo de deteccao e resposta (Modo 1)
+Wants=mecanismo-p0f.service mecanismo-prober.service mecanismo-detector.service mecanismo-arp.service
+
+[Install]
+WantedBy=multi-user.target
