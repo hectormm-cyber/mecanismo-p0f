@@ -1,0 +1,27 @@
+
+{
+  "14:18:77": {
+    "name": "Windows-Estacao",
+    "hardware": "Dell",
+    "os": "Windows",
+    "dist": 0,
+    "class_id": "MSFT 5.0",
+    "raw_sig": [
+      "4:128+0:0:1460:8192,8:mss,nop,ws,nop,nop,sok:df,id+:0",
+      "4:128+0:0:1460:8192,0:mss,nop,nop,sok:df,id+:0"
+    ],
+    "sig_tolerance": "ignore_ttl"
+  },
+  "a2:98:55:29:6a:d5": {
+    "name": "Sensor-Ponte",
+    "hardware": "VM",
+    "os": "Linux",
+    "dist": 0
+  },
+  "50:00:00:02:00:01": {
+    "name": "Gateway-Filial",
+    "hardware": "MikroTik",
+    "dist": 0
+  }
+}
+

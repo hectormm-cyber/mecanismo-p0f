@@ -1,0 +1,15 @@
+
+[Unit]
+Description=Analyzer do Mecanismo Modo 2 (decisao centralizada)
+After=network-online.target rsyslog.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /opt/mecanismo/analyzer.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+
