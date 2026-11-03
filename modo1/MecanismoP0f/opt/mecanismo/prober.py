@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
-"""prober.py v6: sondagem ativa (nmap -sT), leitura do p0f e alertas.
+"""prober.py v7: sondagem ativa (nmap -sT), leitura do p0f e alertas.
 
 v6: campos da integracao com o Wazuh, comuns aos dois modos (wazuh/README.md):
 "origem" identifica o mecanismo, "mode" o modo e "srcip" o IP a conter.
+
+v7: a assinatura estrutural da pilha TCP (raw_sig) passa a decidir, com o mesmo
+criterio do analyzer.py do Modo 2. Os demais fatores (TTL, portas, Class-Id)
+mudam com um comando no host; a janela, a escala, a ordem das opcoes TCP e os
+quirks de cabecalho vem do codigo da pilha. Quando o baseline declara raw_sig e
+a sondagem nao obtem nenhuma assinatura (alvo sem porta aberta, ou p0f sem
+syn+ack), o veredito e inconclusive: nao da para confirmar nem para acusar.
 
 Fluxo: evento do detector (events.jsonl) -> ping (TTL) -> nmap -sT nas portas comuns
 -> leitura das linhas syn+ack do p0f.log para o IP -> comparacao com o baseline
@@ -134,6 +141,22 @@ def p0f_synack(ip, offset):
     return found
 
 
+def sig_core(raw_sig):
+    """Parte estrutural da assinatura do p0f, sem o campo de TTL e saltos.
+
+    raw_sig = ver:ittl+dist:olen:mss:wsize,scale:olayout:quirks:pclass
+    O campo 1 carrega o TTL, que o invasor altera com ip_default_ttl, e os
+    saltos, ja verificados pelo fator dist. Os demais campos descrevem a pilha:
+    MSS, janela, escala, ordem das opcoes TCP e quirks de cabecalho.
+    """
+    if not raw_sig:
+        return None
+    p = raw_sig.split(":")
+    if len(p) < 8:
+        return None
+    return ":".join([p[0]] + p[2:])
+
+
 def os_family(name):
     if not name or "?" in name:
         return None
@@ -157,7 +180,8 @@ def to_int(value):
         return None
 
 
-def decide(status, expected_os, observed, open_ports, dist, base, class_id=MISSING):
+def decide(status, expected_os, observed, open_ports, dist, base, class_id=MISSING,
+           raw_sig=None):
     """Devolve (veredito, motivos). Pura: nao acessa rede nem arquivos."""
     reasons = []
     if status != "authorized":
@@ -192,7 +216,30 @@ def decide(status, expected_os, observed, open_ports, dist, base, class_id=MISSI
     if exp_dist is not None and dist is not None and dist != exp_dist:
         reasons.append("saltos:esperado=%d,observado=%d" % (exp_dist, dist))
 
-    return ("mismatch-possible-clone" if reasons else "consistent"), reasons
+    # 5) assinatura estrutural da pilha TCP (mesmo criterio do Modo 2).
+    # O baseline aceita uma assinatura ou uma lista delas. Com
+    # sig_tolerance = "ignore_ttl" a comparacao usa sig_core().
+    exp_sig = base.get("raw_sig")
+    sig_pendente = False
+    if exp_sig:
+        if raw_sig:
+            exp_list = exp_sig if isinstance(exp_sig, list) else [exp_sig]
+            if base.get("sig_tolerance") == "ignore_ttl":
+                esperadas = {sig_core(x) for x in exp_list} - {None}
+                observada = sig_core(raw_sig)
+            else:
+                esperadas, observada = set(exp_list), raw_sig
+            if esperadas and observada and observada not in esperadas:
+                reasons.append("raw-sig:esperado=%s,observado=%s"
+                               % ("|".join(sorted(esperadas)), observada))
+        else:
+            sig_pendente = True  # baseline exige assinatura e nao houve nenhuma
+
+    if reasons:
+        return "mismatch-possible-clone", reasons
+    if sig_pendente:
+        return "inconclusive", ["sem-raw-sig"]
+    return "consistent", reasons
 
 
 def probe(ip, mac=None, status="unknown", expected=None, name=None, base=None,
@@ -220,7 +267,8 @@ def probe(ip, mac=None, status="unknown", expected=None, name=None, base=None,
     if method is None:
         method = "none"
 
-    verdict, reasons = decide(status, expected, observed, ports, dist, base, class_id)
+    verdict, reasons = decide(status, expected, observed, ports, dist, base, class_id,
+                              raw_sig)
     alert = verdict in ALERT_VERDICTS
 
     rec = {"ts": utcnow(), "origem": "mecanismo-p0f", "mode": "1",
@@ -228,8 +276,10 @@ def probe(ip, mac=None, status="unknown", expected=None, name=None, base=None,
            "hostname": hostname,
            "dhcp_class_id": None if class_id is MISSING else class_id,
            "expected_os": expected, "expected_ports": base.get("ports"),
-           "expected_dist": base.get("dist"), "icmp_ttl": ttl, "open_ports": ports,
+           "expected_dist": base.get("dist"), "expected_sig": base.get("raw_sig"),
+           "icmp_ttl": ttl, "open_ports": ports,
            "p0f_os": os_name, "dist": dist, "raw_sig": raw_sig,
+           "sig_core": sig_core(raw_sig),
            "observed_family": observed, "method": method,
            "verdict": verdict, "reasons": reasons, "alert": alert,
            "event_ts": event.get("ts"), "event_rx_ts": event.get("rx_ts"),

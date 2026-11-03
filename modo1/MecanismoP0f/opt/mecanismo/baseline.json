@@ -8,6 +8,8 @@
       3389
     ],
     "dist": 2,
-    "class_id": "MSFT 5.0"
+    "class_id": "MSFT 5.0",
+    "raw_sig": "4:126+2:0:1460:8192,8:mss,nop,ws,sok,ts:df,id+:0",
+    "sig_tolerance": "ignore_ttl"
   }
 }
