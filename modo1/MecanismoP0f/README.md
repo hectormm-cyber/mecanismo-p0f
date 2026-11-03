@@ -29,7 +29,7 @@ Os arquivos estão no mesmo caminho que ocupam no servidor.
 | Arquivo | Versão | Função | Lê | Grava |
 | --- | --- | --- | --- | --- |
 | `opt/mecanismo/detector.py` | v2 | Presença pelo log DHCP | `mikrotik.log`, `baseline.json` | `events.jsonl` |
-| `opt/mecanismo/arp_poller.py` | v2 | Varredura, tabela ARP e leases por SSH | Roteador, `baseline.json`, `events.jsonl` | `events.jsonl` |
+| `opt/mecanismo/arp_poller.py` | v3 | Varredura, tabela ARP e leases por SSH | Roteador, `baseline.json`, `events.jsonl` | `events.jsonl` |
 | `opt/mecanismo/prober.py` | v5 | Sondagem, *fingerprinting* e decisão | `events.jsonl`, `p0f.log`, `baseline.json` | `verdicts.jsonl`, `alerts.jsonl` |
 | `opt/mecanismo/resumo.py` | | Resumo de eventos e vereditos, com latência | `events.jsonl`, `verdicts.jsonl` | Tela |
 | `opt/mecanismo/baseline.json` | | Padrões de ativos autorizados | | |

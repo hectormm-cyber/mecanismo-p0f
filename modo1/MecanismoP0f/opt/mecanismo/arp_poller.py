@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
-"""Polling ARP e DHCP (Modo 1): le a tabela ARP e os leases DHCP do MikrotikFilial
+"""Polling ARP e DHCP (Modo 1), v3: le a tabela ARP e os leases DHCP do MikrotikFilial
 por SSH e grava cada par (MAC, IP) novo no mesmo events.jsonl do detector.
+
+v3: so anuncia pares presentes na tabela ARP. O lease apenas completa o evento
+(nome do host). Um lease continua "bound" ate expirar, inclusive com o host
+desligado; anunciado sozinho, o host ausente nao respondia a sondagem e o
+silencio virava alerta e contencao do IP (achado da integracao com o Wazuh).
 
 Complementa o detector.py nos dois casos que o log DHCP nao cobre: dispositivo com
 IP estatico que nao envia nem inform, e mensagem Syslog perdida (UDP). Os eventos
@@ -172,7 +177,7 @@ def cycle(known, show):
             print("LEASE %-15s %s %s %s" % (ip, mac, l["hostname"], l["class_id"]), flush=True)
 
     base, now = baseline(), time.time()
-    for mac, ip in sorted(arp | set(bound), key=lambda p: ipaddress.ip_address(p[1])):
+    for mac, ip in sorted(arp, key=lambda p: ipaddress.ip_address(p[1])):  # v3: so ARP
         last = known.seen.get((mac, ip))
         prev = known.ip_mac.get(ip)
         known.seen[(mac, ip)] = now
@@ -180,8 +185,8 @@ def cycle(known, show):
         if (last is not None and now - last <= ABSENT
                 and now - known.announced.get((mac, ip), 0) <= REVALIDATE):
             continue
-        in_arp, lease = (mac, ip) in arp, bound.get((mac, ip))
-        source = "arp+dhcp-lease" if in_arp and lease else ("arp" if in_arp else "dhcp-lease")
+        lease = bound.get((mac, ip))
+        source = "arp+dhcp-lease" if lease else "arp"
         reason = ("novo" if last is None else
                   "reaparecimento" if now - last > ABSENT else "reverificacao")
         emit(mac, ip, source, lease, prev if prev and prev != mac else None, base, reason)
