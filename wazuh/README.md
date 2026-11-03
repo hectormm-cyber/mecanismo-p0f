@@ -2,7 +2,7 @@
 
 Contenção comum aos dois modos do mecanismo. A decisão continua no mecanismo; o Wazuh transporta o veredito, classifica, registra e executa o bloqueio nos *endpoints*. A mesma configuração atende os dois modos, porque ambos gravam o veredito no mesmo arquivo e com o mesmo contrato.
 
-**Estado: em validação no laboratório do Modo 1 (ramo `integracao-wazuh`). Só vai para o `main` depois dos testes.**
+**Estado: validada no laboratório do Modo 1 em 03/11/2026, com contenção real de dispositivo não autorizado e de clone de MAC.**
 
 ## Fluxo
 
