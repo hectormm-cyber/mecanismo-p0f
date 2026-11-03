@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""prober.py v7: sondagem ativa (nmap -sT), leitura do p0f e alertas.
+"""prober.py v8: sondagem ativa (nmap -sT), leitura do p0f e alertas.
 
 v6: campos da integracao com o Wazuh, comuns aos dois modos (wazuh/README.md):
 "origem" identifica o mecanismo, "mode" o modo e "srcip" o IP a conter.
@@ -10,6 +10,12 @@ mudam com um comando no host; a janela, a escala, a ordem das opcoes TCP e os
 quirks de cabecalho vem do codigo da pilha. Quando o baseline declara raw_sig e
 a sondagem nao obtem nenhuma assinatura (alvo sem porta aberta, ou p0f sem
 syn+ack), o veredito e inconclusive: nao da para confirmar nem para acusar.
+
+v8: o Class-Id so e comparado quando a fonte do evento observou o pacote DHCP
+(class_id_observado). A v7 isentava apenas a fonte "arp", entao um evento de
+lease, que no RouterOS 6.40.4 nunca carrega o campo, acusava de clone o ativo
+legitimo. Medido no laboratorio: o Windows de referencia alternava entre
+consistent e mismatch-possible-clone conforme a camada que o via por ultimo.
 
 Fluxo: evento do detector (events.jsonl) -> ping (TTL) -> nmap -sT nas portas comuns
 -> leitura das linhas syn+ack do p0f.log para o IP -> comparacao com o baseline
@@ -36,6 +42,21 @@ UNIX_LIKE = ["linux", "mac", "ios", "android", "bsd", "solaris", "unix"]
 ALERT_VERDICTS = {"mismatch-possible-clone", "unauthorized-fingerprinted",
                   "unauthorized-unresolved"}
 MISSING = object()  # Class-Id desconhecido (ex.: modo manual sem evento)
+DHCP_SOURCES = ("dhcp", "dhcp-inform")  # fontes que leem o pacote DHCP
+
+
+def class_id_observado(ev):
+    """Class-Id do evento, ou MISSING quando a fonte nao observa o pacote DHCP.
+
+    So o detector le o pacote DHCP e enxerga o Class-Id. O poller ARP nao ve
+    DHCP nenhum, e o lease do RouterOS 6.40.4 nao guarda o campo. Nesses casos
+    class_id nulo significa "nao observado", e nao "nao enviado": tratar os dois
+    como iguais acusa de clone o ativo legitimo visto pela camada ARP.
+    Eventos sem o campo source vem do detector v1 e contam como DHCP.
+    """
+    if not ev or ev.get("source", "dhcp") not in DHCP_SOURCES:
+        return MISSING
+    return ev.get("class_id")
 
 
 def utcnow():
@@ -331,7 +352,7 @@ def main():
         base = base_for(mac)
         class_id, hostname = MISSING, None
         if ev and (ev.get("mac") or "").lower() == mac:
-            class_id, hostname = (ev.get("class_id") if ev.get("source", "dhcp") != "arp" else MISSING), ev.get("hostname")
+            class_id, hostname = class_id_observado(ev), ev.get("hostname")
         expected = a.expected or base.get("os")
         status = "authorized" if (expected or base) else "unknown"
         probe(a.ip, mac=mac, status=status, expected=expected,
@@ -352,7 +373,7 @@ def main():
         probe(ip, mac=mac, status=st,
               expected=ev.get("expected_os") or base.get("os"),
               name=ev.get("name"), base=base,
-              class_id=(ev.get("class_id") if ev.get("source", "dhcp") != "arp" else MISSING),
+              class_id=class_id_observado(ev),
               hostname=ev.get("hostname"), event=ev)
 
 

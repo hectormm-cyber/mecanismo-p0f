@@ -30,7 +30,7 @@ Os arquivos estão no mesmo caminho que ocupam no servidor.
 | --- | --- | --- | --- | --- |
 | `opt/mecanismo/detector.py` | v2 | Presença pelo log DHCP | `mikrotik.log`, `baseline.json` | `events.jsonl` |
 | `opt/mecanismo/arp_poller.py` | v3 | Varredura, tabela ARP e leases por SSH | Roteador, `baseline.json`, `events.jsonl` | `events.jsonl` |
-| `opt/mecanismo/prober.py` | v7 | Sondagem, *fingerprinting* e decisão. Grava `mecanismo` e `srcip` para o Wazuh | `events.jsonl`, `p0f.log`, `baseline.json` | `verdicts.jsonl`, `alerts.jsonl` |
+| `opt/mecanismo/prober.py` | v8 | Sondagem, *fingerprinting* e decisão. Grava `mecanismo` e `srcip` para o Wazuh | `events.jsonl`, `p0f.log`, `baseline.json` | `verdicts.jsonl`, `alerts.jsonl` |
 | `opt/mecanismo/resumo.py` | | Resumo de eventos e vereditos, com latência | `events.jsonl`, `verdicts.jsonl` | Tela |
 | `opt/mecanismo/baseline.json` | | Padrões de ativos autorizados | | |
 | `etc/rsyslog.d/10-filial.conf` | | Recebe Syslog em UDP 514 e separa o que vem do `CHR-FILIAL` | | `/var/log/filial/mikrotik.log` |
@@ -84,7 +84,7 @@ A chave é o MAC completo ou o prefixo do fabricante (três primeiros bytes). A 
 | `ports` | As portas abertas para o mecanismo devem ser exatamente estas |
 | `dist` | Saltos medidos pelo p0f ou estimados pelo TTL |
 | `os` | Família de SO observada |
-| `class_id` | *Class-Id* do DHCP, comparado só em eventos vindos de DHCP |
+| `class_id` | *Class-Id* do DHCP, comparado só em eventos cuja fonte leu o pacote DHCP (`dhcp` ou `dhcp-inform`). Eventos de ARP ou de *lease* não observam o campo |
 | `raw_sig` | Assinatura estrutural da pilha TCP lida pelo p0f. Aceita uma assinatura ou uma lista. Sem assinatura observada, o veredito é `inconclusive` |
 | `sig_tolerance` | `ignore_ttl` compara pelo `sig_core`, sem o octeto de TTL e saltos, já verificados pelo fator `dist` |
 | `name`, `hardware` | Informativos |
